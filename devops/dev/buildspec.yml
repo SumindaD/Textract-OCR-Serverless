@@ -1,0 +1,13 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+        nodejs: 10
+    commands:
+      - printenv
+      - npm install
+      - npm install -g serverless
+      - npm install serverless-pseudo-parameters
+  post_build:
+    commands:
+      - serverless deploy --stage dev
