@@ -2,10 +2,10 @@ service: textract-ocr-service
 
 custom:
   currentStage: ${opt:stage, self:provider.stage}
-  s3BucketName: msntextractbucket-#{AWS::AccountId}-${self:custom.currentStage}
-  snsTopicName: pdfExtractionDone
+  s3BucketName: textractbucket-#{AWS::AccountId}-${self:custom.currentStage}
+  snsTopicName: pdfExtractionDone-${self:custom.currentStage}
   boto3LayerARN: arn:aws:lambda:us-east-1:071415405205:layer:boto3-layer:3
-  snsFullAccessRoleName: AwsSnsFullAccessRole
+  snsFullAccessRoleName: AwsSnsFullAccessRole-${self:custom.currentStage}
 
 provider:
   name: aws
