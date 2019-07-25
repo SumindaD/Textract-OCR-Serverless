@@ -2,8 +2,9 @@ version: 0.1
 phases:
   install:
     commands:
+      - printenv
       - npm install
       - npm install -g serverless
-  build:
+  post_build:
     commands:
-      - serverless deploy --stage dev | tee deploy.out
+      - serverless deploy --stage dev
