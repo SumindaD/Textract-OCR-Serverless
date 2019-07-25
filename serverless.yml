@@ -1,0 +1,65 @@
+service: textract-ocr-service
+
+custom:
+  currentStage: ${opt:stage, self:provider.stage}
+  s3BucketName: msntextractbucket-${self:custom.currentStage}
+  snsTopicName: pdfExtractionDone
+  boto3LayerARN: arn:aws:lambda:us-east-1:071415405205:layer:boto3-layer:3
+  snsFullAccessRoleName: AwsSnsFullAccessRole
+
+provider:
+  name: aws
+  iamManagedPolicies:
+  - arn:aws:iam::aws:policy/AmazonSNSFullAccess
+  - arn:aws:iam::aws:policy/AmazonTextractFullAccess
+  - arn:aws:iam::aws:policy/AmazonS3FullAccess
+  runtime: python3.7
+  versionFunctions: false
+  region: us-east-1
+
+functions:
+  pdfgetjobresult:
+    handler: pdf_extract_result.handle
+    layers:
+      - ${self:custom.boto3LayerARN}
+    events:
+      - sns:
+          topicName: ${self:custom.snsTopicName}
+          displayName: Pdf Extraction Done SNS
+  pdfextractstart:
+    handler: pdf_extract_start.handle
+    layers:
+      - ${self:custom.boto3LayerARN}
+    environment:
+      PDF_JOB_SNS_TOPIC_ARN:
+        Ref: SNSTopicPdfExtractionDone
+      LAMBDA_ROLE_ARN:
+        !Join
+          - ''
+          - - 'arn:aws:iam::'
+            - !Ref 'AWS::AccountId'
+            - ':role/'
+            - Ref: snsAccessRole
+    events:
+      - s3:
+          bucket: ${self:custom.s3BucketName}
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: .pdf
+
+resources:
+  Resources:
+    snsAccessRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:custom.snsFullAccessRoleName}
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/AmazonSNSFullAccess
+        AssumeRolePolicyDocument:
+          Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - textract.amazonaws.com
+            Action:
+            - sts:AssumeRole
