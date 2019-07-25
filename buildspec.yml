@@ -7,6 +7,7 @@ phases:
       - printenv
       - npm install
       - npm install -g serverless
+      - npm install serverless-pseudo-parameters
   post_build:
     commands:
-      - serverless deploy --stage dev
+      - serverless deploy

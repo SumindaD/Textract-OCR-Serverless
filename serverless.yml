@@ -1,8 +1,7 @@
 service: textract-ocr-service
 
 custom:
-  currentStage: ${opt:stage, self:provider.stage}
-  s3BucketName: msntextractbucket-${self:custom.currentStage}
+  s3BucketName: msntextractbucket-#{AWS::AccountId}
   snsTopicName: pdfExtractionDone
   boto3LayerARN: arn:aws:lambda:us-east-1:071415405205:layer:boto3-layer:3
   snsFullAccessRoleName: AwsSnsFullAccessRole
@@ -16,6 +15,9 @@ provider:
   runtime: python3.7
   versionFunctions: false
   region: us-east-1
+
+plugins:
+  - serverless-pseudo-parameters
 
 functions:
   pdfgetjobresult:
@@ -33,13 +35,7 @@ functions:
     environment:
       PDF_JOB_SNS_TOPIC_ARN:
         Ref: SNSTopicPdfExtractionDone
-      LAMBDA_ROLE_ARN:
-        !Join
-          - ''
-          - - 'arn:aws:iam::'
-            - !Ref 'AWS::AccountId'
-            - ':role/'
-            - Ref: snsAccessRole
+      LAMBDA_ROLE_ARN: '#{snsAccessRole.Arn}'
     events:
       - s3:
           bucket: ${self:custom.s3BucketName}
