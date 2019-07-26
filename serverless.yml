@@ -4,8 +4,8 @@ custom:
   currentStage: ${opt:stage, self:provider.stage}
   s3BucketName: textractbucket-#{AWS::AccountId}-${self:custom.currentStage}
   snsTopicName: pdfExtractionDone
-  boto3LayerARN: arn:aws:lambda:us-east-1:071415405205:layer:boto3-layer:3
   snsFullAccessRoleName: AwsSnsFullAccessRole-${self:custom.currentStage}
+  lambdaRunTime: python3.7
 
 provider:
   name: aws
@@ -13,18 +13,26 @@ provider:
   - arn:aws:iam::aws:policy/AmazonSNSFullAccess
   - arn:aws:iam::aws:policy/AmazonTextractFullAccess
   - arn:aws:iam::aws:policy/AmazonS3FullAccess
-  runtime: python3.7
+  runtime: ${self:custom.lambdaRunTime}
   versionFunctions: false
   region: us-east-1
 
 plugins:
   - serverless-pseudo-parameters
 
+layers:
+  boto3Layer:
+    path: boto3
+    name: boto3-layer
+    description: Boto3 layer for stage
+    compatibleRuntimes:
+      - ${self:custom.lambdaRunTime}
+
 functions:
   pdfgetjobresult:
     handler: pdf_extract_result.handle
     layers:
-      - ${self:custom.boto3LayerARN}
+      - { Ref: Boto3LayerLambdaLayer }
     events:
       - sns:
           topicName: ${self:custom.snsTopicName}
@@ -32,7 +40,7 @@ functions:
   pdfextractstart:
     handler: pdf_extract_start.handle
     layers:
-      - ${self:custom.boto3LayerARN}
+      - { Ref: Boto3LayerLambdaLayer }
     environment:
       PDF_JOB_SNS_TOPIC_ARN:
         Ref: SNSTopicPdfExtractionDone
