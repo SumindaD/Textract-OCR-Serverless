@@ -15,7 +15,6 @@ provider:
   - arn:aws:iam::aws:policy/AmazonS3FullAccess
   runtime: ${self:custom.lambdaRunTime}
   versionFunctions: false
-  region: us-east-1
 
 plugins:
   - serverless-pseudo-parameters
